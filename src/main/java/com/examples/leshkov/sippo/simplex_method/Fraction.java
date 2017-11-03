@@ -3,6 +3,12 @@ package com.examples.leshkov.sippo.simplex_method;
 public class Fraction {
 	private long numerator, denominator;
 
+
+	public Fraction() {
+		numerator = 0;
+		denominator = 1;
+	}
+
 	public Fraction(final long numerator) {
 		this.numerator = numerator;
 		this.denominator = 1;
@@ -25,6 +31,11 @@ public class Fraction {
 		}
 
 		reduce();
+	}
+
+	public Fraction(final Fraction f) {
+		this.numerator = f.numerator;
+		this.denominator = f.denominator;
 	}
 
 
@@ -102,6 +113,19 @@ public class Fraction {
 	}
 
 
+	public void multiplyBy(final Fraction f) {
+		numerator *= f.numerator;
+		denominator *= f.denominator;
+		reduce();
+	}
+
+	public void divideBy(final Fraction f) {
+		numerator *= f.denominator;
+		denominator *= f.numerator;
+		reduce();
+	}
+
+
 	public void invertSign() {
 		numerator *= -1;
 	}
@@ -115,6 +139,12 @@ public class Fraction {
 
 	@Override
 	public String toString() {
+		if (numerator == 0) {
+			return "0";
+		} else if (denominator == 1) {
+			return Long.toString(numerator);
+		}
+
 		return numerator + "/" + denominator;
 	}
 
