@@ -1,10 +1,11 @@
 package com.examples.leshkov.sippo;
 
-import com.examples.leshkov.sippo.simplex_method.SimplexArtificialBasisSolver;
+import com.examples.leshkov.sippo.simplex_method.Fraction;
 
 public class App1 {
 
 	public static void main(String[] args) {
+		/*
 		double[][] eq = new double[][] {
 			new double[] {1, 1, 1, 0, 0, 0, 0, 0, 0},
 			new double[] {0, 0, 0, 1, 1, 1, 0, 0, 0},
@@ -26,5 +27,11 @@ public class App1 {
 		}
 
 		System.out.println(fStar);
+		*/
+
+		Fraction half = new Fraction(32, 64);
+		Fraction twoThirds = new Fraction(6, 9);
+
+		System.out.println(half.subtract(twoThirds));
 	}
 }
