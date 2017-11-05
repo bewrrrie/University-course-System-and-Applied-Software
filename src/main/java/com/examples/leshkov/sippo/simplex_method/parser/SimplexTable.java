@@ -50,6 +50,7 @@ public class SimplexTable {
 		Fraction[] newBasis = transformBasis(mainElementI, mainElementJ);
 		Fraction[][] newLimits = transformLimits(mainElementI, mainElementJ);
 
+
 		function = newFunction;
 		basis = newBasis;
 		limits = newLimits;
@@ -67,7 +68,7 @@ public class SimplexTable {
 		minusMain.invertSign();
 
 		// Transform free coefficient:
-		Fraction tmp = function[mainElementJ + 1];
+		Fraction tmp = new Fraction(function[mainElementJ + 1]);
 		tmp.multiplyBy(basis[mainElementI]);
 		tmp.divideBy(main);
 
@@ -78,7 +79,7 @@ public class SimplexTable {
 			if (j - 1 == mainElementJ) {
 				newFunction[j] = function[j].divide(minusMain);
 			} else {
-				tmp = function[mainElementJ + 1];
+				tmp = new Fraction(function[mainElementJ + 1]);
 				tmp.multiplyBy(limits[mainElementI][j - 1]);
 				tmp.divideBy(main);
 
@@ -91,14 +92,25 @@ public class SimplexTable {
 
 
 	private Fraction[] transformBasis(
-		//TODO
 		final int mainElementI,
 		final int mainElementJ
-		//TODO
 	) {
-		//TODO
-		return new Fraction[limits.length];
-		//TODO
+		Fraction[] newBasis = new Fraction[limits.length];
+		Fraction main = limits[mainElementI][mainElementJ];
+
+		for (int i = 0; i < limits.length; i++) {
+			if (i == mainElementI) {
+				newBasis[i] = basis[i].divide(main);
+			} else {
+				Fraction tmp = new Fraction(basis[mainElementI]);
+				tmp.multiplyBy(limits[i][mainElementJ]);
+				tmp.divideBy(main);
+
+				newBasis[i] = basis[i].subtract(tmp);
+			}
+		}
+
+		return newBasis;
 	}
 
 
@@ -116,7 +128,7 @@ public class SimplexTable {
 			for (int j = 0; j < limits[i].length; j++) {
 
 				if (i != mainElementI && j != mainElementJ) {
-					Fraction tmp = limits[i][mainElementJ];
+					Fraction tmp = new Fraction(limits[i][mainElementJ]);
 					tmp.multiplyBy(limits[mainElementI][j]);
 					tmp.divideBy(main);
 
