@@ -16,7 +16,7 @@ import static com.examples.leshkov.sippo.extremum.SolverConstants.*;
 /**
  * Main class.
  */
-public class App {
+public class Main {
 
 	private static NumericFunction<Double, Double> createFunctionDefinedOnSegment(
 		double a,

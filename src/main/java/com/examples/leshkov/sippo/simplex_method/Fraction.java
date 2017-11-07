@@ -113,6 +113,13 @@ public class Fraction {
 	}
 
 
+	public void increaseBy(final Fraction f) {
+		denominator *= f.denominator;
+		numerator *= f.denominator;
+		numerator += f.numerator * denominator;
+		reduce();
+	}
+
 	public void multiplyBy(final Fraction f) {
 		numerator *= f.numerator;
 		denominator *= f.denominator;

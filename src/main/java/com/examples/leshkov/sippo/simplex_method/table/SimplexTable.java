@@ -1,15 +1,15 @@
-package com.examples.leshkov.sippo.simplex_method.parser;
+package com.examples.leshkov.sippo.simplex_method.table;
 
 import com.examples.leshkov.sippo.simplex_method.Fraction;
 
 public class SimplexTable {
-	private Fraction[] function, basis;
+	private Fraction[] function, constants;
 	private Fraction[][] limits;
 
 
 	public SimplexTable(
 		final Fraction[] function,
-		final Fraction[] basis,
+		final Fraction[] constants,
 		final Fraction[][] limits
 	) {
 		for (int i = 1; i < limits.length; i++) {
@@ -26,7 +26,7 @@ public class SimplexTable {
 			);
 		}
 
-		if (basis.length != limits.length) {
+		if (constants.length != limits.length) {
 			throw new IllegalArgumentException(
 				"Basis variables vector must have the same length as limits matrix height!"
 			);
@@ -37,7 +37,7 @@ public class SimplexTable {
 			this.function[i].invertSign();
 		}
 
-		this.basis = basis;
+		this.constants = constants;
 		this.limits = limits;
 	}
 
@@ -50,9 +50,8 @@ public class SimplexTable {
 		Fraction[] newBasis = transformBasis(mainElementI, mainElementJ);
 		Fraction[][] newLimits = transformLimits(mainElementI, mainElementJ);
 
-
 		function = newFunction;
-		basis = newBasis;
+		constants = newBasis;
 		limits = newLimits;
 	}
 
@@ -69,7 +68,7 @@ public class SimplexTable {
 
 		// Transform free coefficient:
 		Fraction tmp = new Fraction(function[mainElementJ + 1]);
-		tmp.multiplyBy(basis[mainElementI]);
+		tmp.multiplyBy(constants[mainElementI]);
 		tmp.divideBy(main);
 
 		newFunction[0] = function[0].subtract(tmp);
@@ -100,13 +99,13 @@ public class SimplexTable {
 
 		for (int i = 0; i < limits.length; i++) {
 			if (i == mainElementI) {
-				newBasis[i] = basis[i].divide(main);
+				newBasis[i] = constants[i].divide(main);
 			} else {
-				Fraction tmp = new Fraction(basis[mainElementI]);
+				Fraction tmp = new Fraction(constants[mainElementI]);
 				tmp.multiplyBy(limits[i][mainElementJ]);
 				tmp.divideBy(main);
 
-				newBasis[i] = basis[i].subtract(tmp);
+				newBasis[i] = constants[i].subtract(tmp);
 			}
 		}
 
@@ -150,6 +149,22 @@ public class SimplexTable {
 	}
 
 
+	public SimplexTable toTableWithArtificialBasis() {
+		Fraction[] newFunction = new Fraction[function.length];
+
+		//TODO using increaseBy() method frm Fraction class.
+
+
+		Fraction[] newConstants = new Fraction[constants.length];
+		Fraction[][] newLimits = new Fraction[limits.length][limits[0].length];
+
+		//
+
+
+		return new SimplexTable(newFunction, newConstants, newLimits);
+	}
+
+
 	@Override
 	public String toString() {
 		StringBuilder result = new StringBuilder();
@@ -162,7 +177,7 @@ public class SimplexTable {
 
 		for (int i = 0; i < limits.length; i++) {
 			result.append('\n');
-			result.append(basis[i]);
+			result.append(constants[i]);
 
 			for (int j = 0; j < limits[0].length; j++) {
 				result.append(" ");
