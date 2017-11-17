@@ -1,6 +1,7 @@
 package com.examples.leshkov.sippo;
 
 import com.examples.leshkov.sippo.simplex_method.Fraction;
+import com.examples.leshkov.sippo.simplex_method.SimplexArtificialBasisSolver;
 import com.examples.leshkov.sippo.simplex_method.table.SimplexTable;
 import com.examples.leshkov.sippo.simplex_method.table.SimplexTableParser;
 
@@ -34,6 +35,9 @@ public class Main1 {
 		System.out.println(table);
 		*/
 
-		System.out.println(SimplexTableParser.parse("src/main/resources/linearExample1"));
+		SimplexTable t = SimplexTableParser.parse("src/main/resources/linearExample4-artBasis");
+		System.out.println(t + "\n");
+		System.out.println("Auxiliary:\n" + t.getAuxiliaryTable() + '\n');
+		System.out.println(SimplexArtificialBasisSolver.solveAuxiliary(t));
 	}
 }

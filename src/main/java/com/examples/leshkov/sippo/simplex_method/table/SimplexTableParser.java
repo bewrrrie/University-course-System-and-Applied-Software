@@ -21,23 +21,21 @@ public class SimplexTableParser {
 				currentLine = in.readLine();
 			}
 
-			Fraction[] function = parseFirstLineToFunctionCoefficient(
-				linesToParse.get(0).split(" ")
-			);
+			String[] terms = linesToParse.get(0).split("\\s+");
 
-
+			Fraction[] function = parseFirstLineToFunctionCoefficient(terms);
 			Fraction[] constants = new Fraction[linesToParse.size() - 1];
-			Fraction[][] limits = new Fraction[linesToParse.size() - 1][linesToParse.get(0).split(" ").length - 2];
+			Fraction[][] limits = new Fraction[linesToParse.size() - 1][terms.length - 2];
 
 			for (int i = 1; i < linesToParse.size(); i++) {
-				if (!containsEquatinOrInequationSign(linesToParse.get(i))) {
+				if (!containsEqualityOrInequalitySign(linesToParse.get(i))) {
 					throw new IllegalArgumentException(
 						"Each limit line must contain exactly one of " +
 						"\"=\", \"<=\", \">=\" equality or inequality signs!"
 					);
 				}
 
-				Fraction[] parsedLine = parseCurrentLine(linesToParse.get(i).split(" "));
+				Fraction[] parsedLine = parseCurrentLine(linesToParse.get(i).split("\\s+"));
 				constants[i - 1] = parsedLine[0];
 				System.arraycopy(parsedLine, 1, limits[i - 1], 0, parsedLine.length - 1);
 			}
@@ -52,7 +50,7 @@ public class SimplexTableParser {
 	}
 
 
-	private static boolean containsEquatinOrInequationSign(final String s) {
+	private static boolean containsEqualityOrInequalitySign(final String s) {
 		return s.contains(" = ") || s.contains(" >= ") || s.contains(" <= ");
 	}
 

@@ -1,6 +1,15 @@
 package com.examples.leshkov.sippo.simplex_method;
 
-public class Fraction {
+import java.math.BigDecimal;
+import java.math.BigInteger;
+
+public class Fraction implements Comparable<Fraction> {
+	public static final Fraction ZERO = new Fraction();
+	public static final Fraction ONE = new Fraction(1);
+	public static final Fraction HALF = new Fraction(1, 2);
+	public static final Fraction THIRD = new Fraction(1, 3);
+
+
 	private long numerator, denominator;
 
 
@@ -141,8 +150,41 @@ public class Fraction {
 		long tmp = numerator;
 		numerator = denominator;
 		denominator = tmp;
+
+		if (denominator < 0 && numerator > 0) {
+			numerator *= -1;
+			denominator *= -1;
+		}
 	}
 
+	public Fraction getNegative() {
+		return new Fraction(-numerator, denominator);
+	}
+
+	public Fraction getInverted() {
+		return new Fraction(denominator, numerator);
+	}
+
+	public Fraction abs() {
+		return new Fraction(Math.abs(numerator), denominator);
+	}
+
+
+	public boolean isPositive() {
+		return numerator > 0;
+	}
+
+	public boolean isNegative() {
+		return numerator < 0;
+	}
+
+	public boolean greaterThan(final Fraction f) {
+		return compareTo(f) > 0;
+	}
+
+	public boolean lessThan(final Fraction f) {
+		return compareTo(f) < 0;
+	}
 
 	@Override
 	public String toString() {
@@ -157,7 +199,7 @@ public class Fraction {
 
 
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(final Object o) {
 		if (this == o) return true;
 		if (!(o instanceof Fraction)) return false;
 
@@ -171,5 +213,32 @@ public class Fraction {
 		int result = (int) (getNumerator() ^ (getNumerator() >>> 32));
 		result = 31 * result + (int) (getDenominator() ^ (getDenominator() >>> 32));
 		return result;
+	}
+
+	@Override
+	public int compareTo(final Fraction f) {
+		BigInteger d = new BigInteger(
+			Long.toString(numerator)
+		).multiply(
+			new BigInteger(Long.toString(f.denominator))
+		).subtract(
+			new BigInteger(Long.toString(f.numerator)).multiply(
+				new BigInteger(Long.toString(denominator))
+			)
+		);
+
+		return d.compareTo(BigInteger.ZERO);
+	}
+
+	public int compareTo(final double number) {
+		BigDecimal d = new BigDecimal(
+			Long.toString(numerator)
+		).subtract(
+			new BigDecimal(Double.toString(number)).multiply(
+				new BigDecimal(Long.toString(denominator))
+			)
+		);
+
+		return d.compareTo(BigDecimal.ZERO);
 	}
 }

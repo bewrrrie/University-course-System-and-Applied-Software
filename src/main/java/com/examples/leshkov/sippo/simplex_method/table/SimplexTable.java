@@ -6,6 +6,8 @@ public class SimplexTable {
 	private Fraction[] function, constants;
 	private Fraction[][] limits;
 
+	private boolean isAuxiliary = false;
+
 
 	public SimplexTable(
 		final Fraction[] function,
@@ -39,6 +41,18 @@ public class SimplexTable {
 
 		this.constants = constants;
 		this.limits = limits;
+	}
+
+	public Fraction[] getFunction() {
+		return function;
+	}
+
+	public Fraction[] getConstants() {
+		return constants;
+	}
+
+	public Fraction[][] getLimits() {
+		return limits;
 	}
 
 
@@ -149,19 +163,40 @@ public class SimplexTable {
 	}
 
 
-	public SimplexTable toTableWithArtificialBasis() {
+	public SimplexTable getAuxiliaryTable() {
 		Fraction[] newFunction = new Fraction[function.length];
 
-		//TODO using increaseBy() method frm Fraction class.
+		newFunction[0] = new Fraction(constants[0].getNegative());
+		for (int i = 1; i < constants.length; i++) {
+			newFunction[0].increaseBy(constants[i].getNegative());
+		}
 
+		for (int i = 1; i < function.length; i++) {
+			newFunction[i] = new Fraction(limits[0][i - 1]);
 
-		Fraction[] newConstants = new Fraction[constants.length];
-		Fraction[][] newLimits = new Fraction[limits.length][limits[0].length];
+			for (int j = 1; j < limits.length; j++) {
+				newFunction[i].increaseBy(limits[j][i - 1]);
+			}
+		}
 
-		//
+		SimplexTable result = new SimplexTable(newFunction, constants, limits);
+		result.isAuxiliary = true;
 
+		return result;
+	}
 
-		return new SimplexTable(newFunction, newConstants, newLimits);
+	public boolean isAuxiliary() {
+		return isAuxiliary;
+	}
+
+	public boolean isOptimal() {
+		for (int i = 1; i < function.length; i++) {
+			if (function[i].compareTo(0) < 0) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 
