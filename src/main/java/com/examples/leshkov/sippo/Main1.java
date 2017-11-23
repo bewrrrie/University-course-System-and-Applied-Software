@@ -37,7 +37,6 @@ public class Main1 {
 
 		SimplexTable t = SimplexTableParser.parse("src/main/resources/linearExample4-artBasis");
 		System.out.println(t + "\n");
-		System.out.println("Auxiliary:\n" + t.getAuxiliaryTable() + '\n');
-		System.out.println(SimplexArtificialBasisSolver.solveAuxiliary(t));
+		SimplexTable result = SimplexArtificialBasisSolver.solve(t);
 	}
 }

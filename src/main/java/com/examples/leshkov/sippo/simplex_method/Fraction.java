@@ -49,10 +49,14 @@ public class Fraction implements Comparable<Fraction> {
 
 
 	private void reduce() {
-		long gcd = gcd(Math.abs(numerator), Math.abs(denominator));
+		if (numerator == 0) {
+			denominator = 1;
+		} else {
+			long gcd = gcd(Math.abs(numerator), Math.abs(denominator));
 
-		this.numerator /= gcd;
-		this.denominator /= gcd;
+			this.numerator /= gcd;
+			this.denominator /= gcd;
+		}
 	}
 
 	private long gcd (long a, long b) {
@@ -185,6 +189,11 @@ public class Fraction implements Comparable<Fraction> {
 	public boolean lessThan(final Fraction f) {
 		return compareTo(f) < 0;
 	}
+
+	public boolean isZero() {
+		return numerator == 0;
+	}
+
 
 	@Override
 	public String toString() {
