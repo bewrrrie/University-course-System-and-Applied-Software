@@ -4,14 +4,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 public class Fraction implements Comparable<Fraction> {
-	public static final Fraction ZERO = new Fraction();
-	public static final Fraction ONE = new Fraction(1);
-	public static final Fraction HALF = new Fraction(1, 2);
-	public static final Fraction THIRD = new Fraction(1, 3);
-
-
 	private long numerator, denominator;
-
 
 	public Fraction() {
 		numerator = 0;

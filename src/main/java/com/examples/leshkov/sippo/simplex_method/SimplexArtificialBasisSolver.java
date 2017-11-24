@@ -9,11 +9,10 @@ public class SimplexArtificialBasisSolver {
 
 	public static SimplexTable solve(final SimplexTable table) {
 		System.out.println("Auxiliary:");
-		SimplexTable result = buildTableWithBasis(table, solveAuxiliary(table));
-
+		SimplexTable result = buildTableWithBasis(table);
+		System.out.println(result);
 		System.out.println("\n" + result);
 
-		/* TODO
 		while (!result.isOptimal()) {
 			boolean solvable = false;
 
@@ -44,7 +43,6 @@ public class SimplexArtificialBasisSolver {
 				return null;
 			}
 		}
-		*/
 
 		return result;
 	}
@@ -92,11 +90,10 @@ public class SimplexArtificialBasisSolver {
 	}
 
 
-	private static SimplexTable buildTableWithBasis(
-		final SimplexTable table,
-		final SimplexTable auxiliary
-	) {
+	private static SimplexTable buildTableWithBasis(final SimplexTable table) {
 		ArrayList<Integer> indices = new ArrayList<>();
+		SimplexTable auxiliary = solveAuxiliary(table);
+		System.out.println(auxiliary);
 
 		for (int i = 0; i < auxiliary.getFunction().length; i++) {
 			if (auxiliary.getFunction()[i].isZero()) {
@@ -104,26 +101,82 @@ public class SimplexArtificialBasisSolver {
 			}
 		}
 
-		Fraction[] function = new Fraction[indices.size()];
-		Fraction[] constants = new Fraction[auxiliary.getConstants().length];
-		Fraction[][] limits = new Fraction[auxiliary.getLimits().length][indices.size() - 1];
+		Fraction[] function = buildFunction(table, auxiliary, indices);
+		Fraction[] constants = buildConstants(auxiliary);
+		Fraction[][] limits = buildLimits(auxiliary, indices);
 
-		for (int i = 0; i < indices.size(); i++) {
-			function[i] = new Fraction(table.getFunction()[i]);
+		return new SimplexTable(function, constants, limits);
+	}
+
+	private static Fraction[] buildFunction(
+		final SimplexTable table,
+		final SimplexTable auxiliary,
+		final ArrayList<Integer> indices
+	) {
+		ArrayList<Integer> basis = new ArrayList<>();
+		for (int i = 1; i < auxiliary.getFunction().length; i++) {
+			if (!indices.contains(i)) {
+				basis.add(i);
+			}
 		}
+
+		Fraction[] function = new Fraction[indices.size()];
+
+		for (int i = 0; i < function.length; i++) {
+			if (basis.contains(i)) {
+				function[i] = new Fraction();
+			} else {
+				function[i] = new Fraction(auxiliary.getFunction()[i]);
+			}
+		}
+
+		for (int i = 0; i < auxiliary.getLimits().length; i++) {
+			Fraction[] adder = new Fraction[auxiliary.getLimits()[i].length];
+			adder[0] = auxiliary.getLimits()[i][0];
+
+			for (int j = 1; j < auxiliary.getFunction().length; j++) {
+				//TODO
+				//TODO
+				if (!basis.contains(j)) {
+					adder[j] = new Fraction(
+						auxiliary.getLimits()[i][j - 1].getNegative()
+					).multiply(auxiliary.getFunction()[basis.get(i)]);
+				}
+				//TODO
+				//TODO
+			}
+
+			for (Fraction j : adder) {
+				System.out.println(j + " ");
+			}
+		}
+
+		return function;
+	}
+
+	private static Fraction[] buildConstants(final SimplexTable auxiliary) {
+		Fraction[] constants = new Fraction[auxiliary.getConstants().length];
 
 		for (int i = 0; i < constants.length; i++) {
 			constants[i] = new Fraction(auxiliary.getConstants()[i]);
 		}
 
+		return constants;
+	}
+
+	private static Fraction[][] buildLimits(
+		final SimplexTable auxiliary,
+		final ArrayList<Integer> indices
+	) {
+		Fraction[][] limits = new Fraction[auxiliary.getLimits().length][indices.size() - 1];
+
 		for (int i = 0; i < limits.length; i++) {
-			for (int j = 0; j < indices.size(); j++) {
-				//TODO
+			for (int j = 0; j < limits[i].length; j++) {
+				limits[i][j] = auxiliary.getLimits()[i][indices.get(j + 1) - 1];
 			}
 		}
 
-
-		return new SimplexTable(function, constants, limits);
+		return limits;
 	}
 
 
@@ -133,7 +186,6 @@ public class SimplexArtificialBasisSolver {
 		}
 
 		SimplexTable auxiliary = table.getAuxiliaryTable();
-		System.out.println(auxiliary);
 
 		BitSet canBeSelectedCol = new BitSet(auxiliary.getFunction().length);
 		canBeSelectedCol.set(0, auxiliary.getFunction().length, true);
@@ -166,8 +218,6 @@ public class SimplexArtificialBasisSolver {
 				}
 
 				auxiliary.transform(i, j);
-				System.out.println("\n" + auxiliary);
-
 			} else {
 				return null;
 			}

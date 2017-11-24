@@ -80,14 +80,14 @@ public class SimplexTable {
 		Fraction minusMain = new Fraction(main);
 		minusMain.invertSign();
 
-		// Transform free coefficient:
+		// Transform free coefficient
 		Fraction tmp = new Fraction(function[mainElementJ + 1]);
 		tmp.multiplyBy(constants[mainElementI]);
 		tmp.divideBy(main);
 
 		newFunction[0] = function[0].subtract(tmp);
 
-		// Transform other.
+		// Transform other
 		for (int j = 1; j < function.length; j++) {
 			if (j - 1 == mainElementJ) {
 				newFunction[j] = function[j].divide(minusMain);
