@@ -42,6 +42,11 @@ public class Fraction implements Comparable<Fraction> {
 
 
 	private void reduce() {
+		if (denominator < 0) {
+			numerator *= -1;
+			denominator *= -1;
+		}
+
 		if (numerator == 0) {
 			denominator = 1;
 		} else {
@@ -120,9 +125,22 @@ public class Fraction implements Comparable<Fraction> {
 
 
 	public void increaseBy(final Fraction f) {
+		long tmp = denominator;
+
 		denominator *= f.denominator;
 		numerator *= f.denominator;
-		numerator += f.numerator * denominator;
+		numerator += f.numerator * tmp;
+
+		reduce();
+	}
+
+	public void decreaseBy(final Fraction f) {
+		long tmp = denominator;
+
+		denominator *= f.denominator;
+		numerator *= f.denominator;
+		numerator -= f.numerator * tmp;
+
 		reduce();
 	}
 

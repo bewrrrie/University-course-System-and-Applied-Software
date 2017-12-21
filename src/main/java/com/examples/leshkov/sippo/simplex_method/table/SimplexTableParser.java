@@ -13,34 +13,15 @@ public class SimplexTableParser {
 
 	public static SimplexTable parse(final File file) throws IOException {
 		try (BufferedReader in = new BufferedReader(new FileReader(file))) {
-			List<String> linesToParse = new ArrayList<>();
-			String currentLine = in.readLine();
-
-			while (currentLine != null) {
-				linesToParse.add((currentLine));
-				currentLine = in.readLine();
-			}
-
-			String[] terms = linesToParse.get(0).split("\\s+");
-
-			Fraction[] function = parseFirstLineToFunctionCoefficient(terms);
-			Fraction[] constants = new Fraction[linesToParse.size() - 1];
-			Fraction[][] limits = new Fraction[linesToParse.size() - 1][terms.length - 2];
+			List<String> linesToParse = readAllLines(in);
+			FunctionLine function = parseFunctionLine(linesToParse.get(0));
+			LimitLine[] limits = new LimitLine[linesToParse.size() - 1];
 
 			for (int i = 1; i < linesToParse.size(); i++) {
-				if (!containsEqualityOrInequalitySign(linesToParse.get(i))) {
-					throw new IllegalArgumentException(
-						"Each limit line must contain exactly one of " +
-						"\"=\", \"<=\", \">=\" equality or inequality signs!"
-					);
-				}
-
-				Fraction[] parsedLine = parseCurrentLine(linesToParse.get(i).split("\\s+"));
-				constants[i - 1] = parsedLine[0];
-				System.arraycopy(parsedLine, 1, limits[i - 1], 0, parsedLine.length - 1);
+				limits[i - 1] = parseLimitLine(linesToParse.get(i));
 			}
 
-			return new SimplexTable(function, constants, limits);
+			return new SimplexTable(function, limits);
 		}
 	}
 
@@ -50,80 +31,109 @@ public class SimplexTableParser {
 	}
 
 
-	private static boolean containsEqualityOrInequalitySign(final String s) {
-		return s.contains(" = ") || s.contains(" >= ") || s.contains(" <= ");
-	}
 
+	private static ArrayList<String> readAllLines(final BufferedReader in) throws IOException {
+		ArrayList<String> result = new ArrayList<>();
 
-	private static Fraction[] parseFirstLineToFunctionCoefficient(final String[] terms) {
-		Fraction[] function = new Fraction[terms.length - 1];
-
-		int sign = 1;
-		if (terms[terms.length - 1].equals("min")) {
-			sign = -1;
-		} else if (!terms[terms.length - 1].equals("max")) {
-			throw new IllegalArgumentException(
-				"At the end of first line \"max\"/\"min\" objective expected!"
-			);
-		}
-
-		for (int j = 0; j < terms.length - 1; j++) {
-			if (terms[j].contains("/")) {
-				String[] frac = terms[j].split("/");
-
-				function[j] = new Fraction(
-					sign * Long.parseLong(frac[0]),
-					Long.parseLong(frac[1])
-				);
-			} else {
-				function[j] = new Fraction(
-					sign * Long.parseLong(terms[j])
-				);
-			}
-		}
-
-		return function;
-	}
-
-
-	private static Fraction[] parseCurrentLine(final String[] terms) {
-		Fraction[] result = new Fraction[terms.length - 1];
-
-		int sign;
-		if (terms[terms.length - 2].equals(">=")) {
-			sign = -1;
-		} else {
-			sign = 1;
-		}
-
-		if (terms[terms.length - 1].contains("/")) {
-			String[] frac = terms[terms.length - 1].split("/");
-
-			result[0] = new Fraction(
-				sign * Long.parseLong(frac[0]),
-				Long.parseLong(frac[1])
-			);
-		} else {
-			result[0] = new Fraction(
-				sign * Long.parseLong(terms[terms.length - 1])
-			);
-		}
-
-		for (int j = 0; j < terms.length - 2; j++) {
-			if (terms[j].contains("/")) {
-				String[] frac = terms[j].split("/");
-
-				result[j + 1] = new Fraction(
-					sign * Long.parseLong(frac[0]),
-					Long.parseLong(frac[1])
-				);
-			} else {
-				result[j + 1] = new Fraction(
-					sign * Long.parseLong(terms[j])
-				);
-			}
+		String currentLine = in.readLine();
+		while (currentLine != null) {
+			result.add((currentLine));
+			currentLine = in.readLine();
 		}
 
 		return result;
+	}
+
+
+
+	private static String checkForMaxMin(final String[] terms) {
+		for (String t : terms) {
+			if (t.equals("max")) {
+				return "max";
+			} else if (t.equals("min")) {
+				return "min";
+			}
+		}
+
+		return null;
+	}
+
+	private static String checkForLimitSign(final String[] terms) {
+		for (String t : terms) {
+			switch (t) {
+				case "<=":
+					return "<=";
+				case ">=":
+					return ">=";
+				case "=":
+					return "=";
+			}
+		}
+
+		return null;
+	}
+
+
+
+	public static FunctionLine parseFunctionLine(final String line) {
+		String[] terms = line.split("\\s+");
+
+		String objective = checkForMaxMin(terms);
+		if (objective == null) {
+			throw new IllegalArgumentException("There is no 'max' or 'min' keyword in function line!");
+		}
+
+
+		Fraction[] coefficients = new Fraction[terms.length - 1];
+
+		for (int i = 0; i < terms.length - 1; i++) {
+			if (terms[i].contains("/")) {
+				String[] numDenom = terms[i].split("/");
+
+				coefficients[i] = new Fraction(
+					Long.parseLong(numDenom[0]),
+					Long.parseLong(numDenom[1])
+				);
+
+			} else {
+				coefficients[i] = new Fraction(Long.parseLong(terms[i]));
+			}
+		}
+
+		return new FunctionLine(coefficients, objective);
+	}
+
+	public static LimitLine parseLimitLine(final String line) {
+		String[] terms = line.split("\\s+");
+
+		String sign = checkForLimitSign(terms);
+		if (sign == null) {
+			throw new IllegalArgumentException("There is no '=' or '<=' or '>=' sign in limit line!");
+		}
+
+
+		Fraction[] coefficients = new Fraction[terms.length - 1];
+		String[] currentFraction = terms[terms.length - 1].split("/");
+
+		coefficients[0] = currentFraction.length > 1 ? new Fraction(
+			Long.parseLong(currentFraction[0]),
+			Long.parseLong(currentFraction[1])
+		) : new Fraction(Long.parseLong(currentFraction[0]));
+
+
+		for (int i = 0; i < coefficients.length - 1; i++) {
+			currentFraction = terms[i].split("/");
+
+			if (currentFraction.length > 1) {
+				coefficients[i + 1] = new Fraction(
+					Long.parseLong(currentFraction[0]),
+					Long.parseLong(currentFraction[1])
+				);
+			} else {
+				coefficients[i + 1] = new Fraction(Long.parseLong(currentFraction[0]));
+			}
+		}
+
+		return new LimitLine(coefficients, sign);
 	}
 }

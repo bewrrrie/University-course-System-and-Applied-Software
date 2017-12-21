@@ -1,3 +1,4 @@
+/*
 package com.examples.leshkov.sippo.simplex_method;
 
 import com.examples.leshkov.sippo.simplex_method.table.SimplexTable;
@@ -8,10 +9,7 @@ import java.util.BitSet;
 public class SimplexArtificialBasisSolver {
 
 	public static SimplexTable solve(final SimplexTable table) {
-		System.out.println("Auxiliary:");
 		SimplexTable result = buildTableWithBasis(table);
-		System.out.println(result);
-		System.out.println("\n" + result);
 
 		while (!result.isOptimal()) {
 			boolean solvable = false;
@@ -37,8 +35,6 @@ public class SimplexArtificialBasisSolver {
 				}
 
 				result.transform(i, j);
-				System.out.println("\n" + result);
-
 			} else {
 				return null;
 			}
@@ -93,7 +89,10 @@ public class SimplexArtificialBasisSolver {
 	private static SimplexTable buildTableWithBasis(final SimplexTable table) {
 		ArrayList<Integer> indices = new ArrayList<>();
 		SimplexTable auxiliary = solveAuxiliary(table);
-		System.out.println(auxiliary);
+
+		if (auxiliary == null) {
+            return null;
+        }
 
 		for (int i = 0; i < auxiliary.getFunction().length; i++) {
 			if (auxiliary.getFunction()[i].isZero()) {
@@ -113,6 +112,7 @@ public class SimplexArtificialBasisSolver {
 		final SimplexTable auxiliary,
 		final ArrayList<Integer> indices
 	) {
+
 		ArrayList<Integer> basis = new ArrayList<>();
 		for (int i = 1; i < auxiliary.getFunction().length; i++) {
 			if (!indices.contains(i)) {
@@ -120,34 +120,28 @@ public class SimplexArtificialBasisSolver {
 			}
 		}
 
-		Fraction[] function = new Fraction[indices.size()];
 
+		Fraction[] function = new Fraction[indices.size()];
 		for (int i = 0; i < function.length; i++) {
-			if (basis.contains(i)) {
-				function[i] = new Fraction();
-			} else {
-				function[i] = new Fraction(auxiliary.getFunction()[i]);
-			}
+			function[i] = new Fraction(table.getFunction()[indices.get(i)].getNegative());
 		}
 
 		for (int i = 0; i < auxiliary.getLimits().length; i++) {
-			Fraction[] adder = new Fraction[auxiliary.getLimits()[i].length];
-			adder[0] = auxiliary.getLimits()[i][0];
+			ArrayList<Fraction> adder = new ArrayList<>();
+			adder.add(auxiliary.getConstants()[i]);
 
 			for (int j = 1; j < auxiliary.getFunction().length; j++) {
-				//TODO
-				//TODO
 				if (!basis.contains(j)) {
-					adder[j] = new Fraction(
-						auxiliary.getLimits()[i][j - 1].getNegative()
-					).multiply(auxiliary.getFunction()[basis.get(i)]);
+					adder.add(new Fraction(auxiliary.getLimits()[i][j - 1].getNegative()));
 				}
-				//TODO
-				//TODO
 			}
 
-			for (Fraction j : adder) {
-				System.out.println(j + " ");
+			function[0].
+			increaseBy(adder.get(0).multiply(table.getFunction()[i + 1].getNegative()));
+			for (int j = 1; j < function.length; j++) {
+				function[j].increaseBy(
+					adder.get(j).multiply(table.getFunction()[i + 1].getNegative())
+				);
 			}
 		}
 
@@ -181,8 +175,8 @@ public class SimplexArtificialBasisSolver {
 
 
 	public static SimplexTable solveAuxiliary(final SimplexTable table) {
-		if (table == null) {
-			return null;
+        if (table == null) {
+            return null;
 		}
 
 		SimplexTable auxiliary = table.getAuxiliaryTable();
@@ -211,17 +205,18 @@ public class SimplexArtificialBasisSolver {
 					return null;
 				}
 
-				int i = findRow(auxiliary, j, canBeSelectedRow);
+                int i = findRow(auxiliary, j, canBeSelectedRow);
 
 				if (i == -1) {
-					return null;
+                    return null;
 				}
 
 				auxiliary.transform(i, j);
-			} else {
+            } else {
+
 				return null;
 			}
-		}
+        }
 
 		if (!auxiliary.isOptimal()) {
 			return null;
@@ -253,13 +248,14 @@ public class SimplexArtificialBasisSolver {
 		final int givenCol,
 		final BitSet flags
 	) {
+
+        Fraction[] constants = table.getConstants();
+        Fraction[][] limits = table.getLimits();
+
 		int result = 0;
-		while (!flags.get(result)) {
+		while (!flags.get(result) && limits[result][givenCol].isPositive()) {
 			result++;
 		}
-
-		Fraction[] constants = table.getConstants();
-		Fraction[][] limits = table.getLimits();
 
 		for (int i = 0; i < constants.length; i++) {
 			Fraction a = constants[i];
@@ -267,23 +263,19 @@ public class SimplexArtificialBasisSolver {
 
 			if (
 				flags.get(i) &&
-				a.isPositive() &&
 				b.isPositive() &&
 
-				a.divide(b).lessThan(
-					constants[result].divide(limits[result][givenCol])
+				a.divide(b).abs().lessThan(
+					constants[result].divide(limits[result][givenCol]).abs()
 				)
 			) {
 				result = i;
 			}
-		}
-
-		if (table.getConstants()[result].isNegative()) {
-			return -1;
-		}
+        }
 
 		flags.flip(result);
 
 		return result;
 	}
 }
+*/

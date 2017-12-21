@@ -2,57 +2,43 @@ package com.examples.leshkov.sippo.simplex_method.table;
 
 import com.examples.leshkov.sippo.simplex_method.Fraction;
 
+import java.util.Arrays;
+import java.util.StringJoiner;
+
 public class SimplexTable {
-	private Fraction[] function, constants;
-	private Fraction[][] limits;
+	private FunctionLine function;
+	private LimitLine[] limits;
 
 	private boolean isAuxiliary = false;
 
-
 	public SimplexTable(
-		final Fraction[] function,
-		final Fraction[] constants,
-		final Fraction[][] limits
+		final FunctionLine function,
+		final LimitLine[] limits
 	) {
-		for (int i = 1; i < limits.length; i++) {
-			if (limits[i].length != limits[0].length) {
-				throw new IllegalArgumentException(
-					"All rows in limits matrix must have the same length!"
-				);
-			}
-		}
+	    for (int i = 1; i < limits.length; i++) {
+	        if (limits[i].getLength() != limits[i - 1].getLength()) {
+	            throw new IllegalArgumentException("All limit rows must have the same size!");
+            }
+        }
 
-		if (function.length != limits[0].length + 1) {
-			throw new IllegalArgumentException(
-				"Function coefficients vector must have the same length as limits matrix + 1!"
-			);
-		}
-
-		if (constants.length != limits.length) {
-			throw new IllegalArgumentException(
-				"Basis variables vector must have the same length as limits matrix height!"
-			);
+		if (function.getLength() != limits[0].getLength()) {
+			throw new IllegalArgumentException("Linear function must have the same size as all limits!");
 		}
 
 		this.function = function;
-		for (int i = 1; i < function.length; i++) {
-			this.function[i].invertSign();
-		}
-
-		this.constants = constants;
 		this.limits = limits;
 	}
 
-	public Fraction[] getFunction() {
+	public FunctionLine getFunction() {
 		return function;
 	}
 
-	public Fraction[] getConstants() {
-		return constants;
-	}
+	public LimitLine[] getLimits() {
+	    return limits;
+    }
 
-	public Fraction[][] getLimits() {
-		return limits;
+	public LimitLine getLimit(final int i) {
+		return limits[i];
 	}
 
 
@@ -60,129 +46,99 @@ public class SimplexTable {
 		final int mainElementI,
 		final int mainElementJ
 	) {
-		Fraction[] newFunction = transformFunction(mainElementI, mainElementJ);
-		Fraction[] newBasis = transformBasis(mainElementI, mainElementJ);
-		Fraction[][] newLimits = transformLimits(mainElementI, mainElementJ);
+		if (
+			mainElementI <= 0 || mainElementJ <= 0 ||
+			mainElementI >= limits.length || mainElementJ >= function.getLength()
+		) {
+			throw new IllegalArgumentException("Indices is out of bounds!");
+		}
 
-		function = newFunction;
-		constants = newBasis;
-		limits = newLimits;
+	    FunctionLine newFunction = transformFunction(mainElementI, mainElementJ);
+	    LimitLine[] newLimits = transformLimits(mainElementI, mainElementJ);
+
+	    function = newFunction;
+	    limits = newLimits;
 	}
 
 
-	private Fraction[] transformFunction(
+	private FunctionLine transformFunction(
 		final int mainElementI,
 		final int mainElementJ
 	) {
-		Fraction[] newFunction = new Fraction[function.length];
+		FunctionLine result = new FunctionLine(function);
 
-		Fraction main = limits[mainElementI][mainElementJ];
+		Fraction main = limits[mainElementI - 1].getCoefficient(mainElementJ);
 		Fraction minusMain = new Fraction(main);
 		minusMain.invertSign();
 
-		// Transform free coefficient
-		Fraction tmp = new Fraction(function[mainElementJ + 1]);
-		tmp.multiplyBy(constants[mainElementI]);
-		tmp.divideBy(main);
-
-		newFunction[0] = function[0].subtract(tmp);
-
-		// Transform other
-		for (int j = 1; j < function.length; j++) {
-			if (j - 1 == mainElementJ) {
-				newFunction[j] = function[j].divide(minusMain);
+		for (int j = 0; j < function.getLength(); j++) {
+			if (j == mainElementJ) {
+				result.getCoefficient(j).divideBy(minusMain);
 			} else {
-				tmp = new Fraction(function[mainElementJ + 1]);
-				tmp.multiplyBy(limits[mainElementI][j - 1]);
-				tmp.divideBy(main);
+				Fraction subtrahend = new Fraction(
+					limits[mainElementI - 1].getCoefficient(j)
+					.multiply(function.getCoefficient(mainElementJ))
+					.divide(main)
+				);
 
-				newFunction[j] = function[j].subtract(tmp);
+				result.getCoefficient(j).decreaseBy(subtrahend);
 			}
 		}
 
-		return newFunction;
+		return result;
 	}
 
 
-	private Fraction[] transformBasis(
+	private LimitLine[] transformLimits(
 		final int mainElementI,
 		final int mainElementJ
 	) {
-		Fraction[] newBasis = new Fraction[limits.length];
-		Fraction main = limits[mainElementI][mainElementJ];
-
+		LimitLine[] result = new LimitLine[limits.length];
 		for (int i = 0; i < limits.length; i++) {
-			if (i == mainElementI) {
-				newBasis[i] = constants[i].divide(main);
-			} else {
-				Fraction tmp = new Fraction(constants[mainElementI]);
-				tmp.multiplyBy(limits[i][mainElementJ]);
-				tmp.divideBy(main);
-
-				newBasis[i] = constants[i].subtract(tmp);
-			}
+			result[i] = new LimitLine(limits[i]);
 		}
 
-		return newBasis;
-	}
-
-
-	private Fraction[][] transformLimits(
-	final int mainElementI,
-	final int mainElementJ
-	) {
-		Fraction[][] newLimits = new Fraction[limits.length][limits[0].length];
-
-		Fraction main = limits[mainElementI][mainElementJ];
+		Fraction main = limits[mainElementI - 1].getCoefficient(mainElementJ);
 		Fraction minusMain = new Fraction(main);
 		minusMain.invertSign();
 
 		for (int i = 0; i < limits.length; i++) {
-			for (int j = 0; j < limits[i].length; j++) {
+			if (i == mainElementI - 1) {
+				for (int j = 0; j < limits[i].getLength(); j++) {
+					if (j != mainElementJ) {
+						result[i].getCoefficient(j).divideBy(main);
+					}
+				}
+			} else {
+				for (int j = 0; j < limits[i].getLength(); j++) {
+					if (j != mainElementJ) {
+						Fraction subtrahend = new Fraction(
+							limits[mainElementI - 1].getCoefficient(j)
+							.multiply(limits[i].getCoefficient(mainElementJ))
+							.divide(main)
+						);
 
-				if (i != mainElementI && j != mainElementJ) {
-					Fraction tmp = new Fraction(limits[i][mainElementJ]);
-					tmp.multiplyBy(limits[mainElementI][j]);
-					tmp.divideBy(main);
-
-					newLimits[i][j] = limits[i][j].subtract(tmp);
-
-				} else if (i == mainElementI && j != mainElementJ) {
-					newLimits[i][j] = limits[i][j].divide(main);
-
-				} else if (i != mainElementI) {
-					newLimits[i][j] = limits[i][j].divide(minusMain);
+						result[i].getCoefficient(j).decreaseBy(subtrahend);
+					} else {
+						result[i].getCoefficient(j).divideBy(minusMain);
+					}
 				}
 			}
 		}
 
-		main.invert();
-		newLimits[mainElementI][mainElementJ] = main;
+		result[mainElementI - 1].getCoefficient(mainElementJ).invert();
 
-		return newLimits;
+		return result;
 	}
 
 
 	public SimplexTable getAuxiliaryTable() {
-		Fraction[] newFunction = new Fraction[function.length];
 
-		newFunction[0] = new Fraction(constants[0].getNegative());
-		for (int i = 1; i < constants.length; i++) {
-			newFunction[0].increaseBy(constants[i].getNegative());
-		}
 
-		for (int i = 1; i < function.length; i++) {
-			newFunction[i] = new Fraction(limits[0][i - 1]);
+		SimplexTable table = null;
+		table.isAuxiliary = true;
 
-			for (int j = 1; j < limits.length; j++) {
-				newFunction[i].increaseBy(limits[j][i - 1]);
-			}
-		}
-
-		SimplexTable result = new SimplexTable(newFunction, constants, limits);
-		result.isAuxiliary = true;
-
-		return result;
+        return table;
 	}
 
 	public boolean isAuxiliary() {
@@ -190,8 +146,8 @@ public class SimplexTable {
 	}
 
 	public boolean isOptimal() {
-		for (int i = 1; i < function.length; i++) {
-			if (function[i].compareTo(0) < 0) {
+		for (int i = 1; i < function.getLength(); i++) {
+			if (function.getCoefficient(i).compareTo(0) < 0) {
 				return false;
 			}
 		}
@@ -200,26 +156,37 @@ public class SimplexTable {
 	}
 
 
+
 	@Override
 	public String toString() {
-		StringBuilder result = new StringBuilder();
+		StringJoiner result = new StringJoiner(" ");
 
-		result.append(function[0]);
-		for (int i = 1; i < function.length; i++) {
-			result.append(" ");
-			result.append(function[i]);
+		for (int i = 0; i < function.getLength(); i++) {
+			result.add(function.getCoefficient(i).toString());
 		}
 
-		for (int i = 0; i < limits.length; i++) {
-			result.append('\n');
-			result.append(constants[i]);
+		result.setEmptyValue("");
+		result.add("\n");
+		result.setEmptyValue(" ");
 
-			for (int j = 0; j < limits[0].length; j++) {
-				result.append(" ");
-				result.append(limits[i][j]);
+		for (int i = 0; i < limits.length; i++) {
+			for (int j = 0; j < limits[i].getLength(); j++) {
+				result.add(limits[i].getCoefficient(j).toString());
 			}
+
+			result.setEmptyValue("");
+			result.add("\n");
+			result.setEmptyValue(" ");
 		}
 
 		return result.toString();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		SimplexTable table = (SimplexTable) o;
+
+		return 	Arrays.equals(table.limits, this.limits) &&
+				table.function.equals(this.function);
 	}
 }
